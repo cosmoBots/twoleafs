@@ -1,0 +1,16 @@
+[get-leaf-info]
+username = xxxxx1
+password = xxxxxx
+username2 = xxxxx1
+password2 = xxxxxx
+; NNA=USA, NE=Europe, NCI=Canada, NMA=Austrailia, NML=Japan
+region = NE
+enchufe1 = 192.168.1.116
+enchufe2 = 192.168.1.118
+todaypriority = 1
+leaf1min = 40
+leaf2min = 20
+leaf1tgt = 60
+leaf2tgt = 50
+leaf1max = 80
+leaf2max = 85

@@ -5,12 +5,79 @@ username2 = xxxxx1
 password2 = xxxxxx
 ; NNA=USA, NE=Europe, NCI=Canada, NMA=Austrailia, NML=Japan
 region = NE
-enchufe1 = 192.168.1.116
-enchufe2 = 192.168.1.118
+plug1address = 192.168.1.116
+plug2address = 192.168.1.118
+advancehours = 8
+cfg_use_weekday = True
+start_minimum_price = 1
+end_minimum_price = 7
+start_maximum_price = 13
+end_maximum_price = 23
+force_leaf1 = False
+force_leaf2 = False
+target_time = 7
+[Normal]
 todaypriority = 1
-leaf1min = 40
-leaf2min = 20
-leaf1tgt = 60
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
 leaf2tgt = 50
 leaf1max = 80
-leaf2max = 85
+leaf2max = 80
+[Monday]
+todaypriority = 2
+leaf1min = 50
+leaf2min = 70
+leaf1tgt = 60
+leaf2tgt = 100
+leaf1max = 80
+leaf2max = 100
+[Tuesday]
+todaypriority = 1
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
+leaf2tgt = 50
+leaf1max = 80
+leaf2max = 80
+[Wednesday]
+todaypriority = 1
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
+leaf2tgt = 50
+leaf1max = 80
+leaf2max = 80
+[Thursday]
+todaypriority = 1
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
+leaf2tgt = 100
+leaf1max = 80
+leaf2max = 100
+[Friday]
+todaypriority = 1
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
+leaf2tgt = 50
+leaf1max = 80
+leaf2max = 80
+[Saturday]
+todaypriority = 1
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
+leaf2tgt = 50
+leaf1max = 80
+leaf2max = 80
+[Sunday]
+todaypriority = 1
+leaf1min = 50
+leaf2min = 50
+leaf1tgt = 70
+leaf2tgt = 50
+leaf1max = 80
+leaf2max = 80
+

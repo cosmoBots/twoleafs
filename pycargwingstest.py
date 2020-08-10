@@ -5,6 +5,11 @@ import datetime
 import calendar
 import json
 
+write_thingsboard = True
+
+import config_tb
+import requests
+
 def wait_update_battery_status(leaf,key,wait_time=1,retries=3,wait_time_retries=1):
     status = leaf.get_status_from_update(key)
     # Currently the nissan servers eventually return status 200 from get_status_from_update(), previously
@@ -186,6 +191,40 @@ def working_session():
 
     plug2 = SmartPlug(plug2address)
     infoEnchufe(plug2,"Second car plug")
+
+
+    if (write_thingsboard):
+        print(config_tb.telemetry_address)
+        print(config_tb.telemetry_address2)
+        unixtime = int(time.mktime(plug1.time.timetuple())*1000)
+        unixtime2 = int(time.mktime(plug2.time.timetuple())*1000)   
+
+        category = "plug1"
+        emeterinfo = plug1.command(('emeter', 'get_realtime'))
+        pload = {'ts':unixtime, "values":{         
+            category+'_is_on':plug1.is_on,
+            category+'_rssi':plug1.rssi,
+            category+'_current_ma':emeterinfo['current_ma'],
+            category+'_power_mw':emeterinfo['power_mw'],
+            }}
+        print(pload)
+        print("========")
+        r = requests.post(config_tb.telemetry_address,json = pload)
+        print(r.status_code)
+
+        category = "plug2"
+        emeterinfo = plug2.command(('emeter', 'get_realtime'))
+        pload = {'ts':unixtime, "values":{         
+            category+'_is_on':plug2.is_on,
+            category+'_rssi':plug2.rssi,
+            category+'_current_ma':emeterinfo['current_ma'],
+            category+'_power_mw':emeterinfo['power_mw'],
+            }}
+        print(pload)
+        print("========")
+        r = requests.post(config_tb.telemetry_address2,json = pload)
+        print(r.status_code)
+
 
     sleepsecs = 10     # Time to wait before polling Nissan servers for update
     sleepsecs2 = 10     # Time to wait before polling Nissan servers for update

@@ -296,7 +296,7 @@ def working_session():
     bat1 = latest_leaf_info.battery_percent
     bat2 = latest_leaf_info2.battery_percent
 
-
+    
     if (todaypriority == 1):
         charge_leaf1_min = charge_min_prio
         charge_leaf2_min = charge_min
@@ -312,58 +312,69 @@ def working_session():
         charge_leaf2_max = charge_max_prio
         charge_leaf1_max = charge_max 
 
-    charge_leaf1 = False
-    charge_leaf2 = False
+    charge_leaf1 = 0
+    charge_leaf2 = 0
 
+    print("charge_leaf1_min",charge_leaf1_min)
+    print("charge_leaf2_min",charge_leaf2_min)
+    
     if (bat1 < leaf1min):
         print("leaf1 < min")
-        charge_leaf1 = charge_leaf1_min
+        if charge_leaf1_min:
+            charge_leaf = 10
     else:
         if (bat1 < leaf1tgt):
             print("leaf1 < tgt")
-            charge_leaf1 = charge_leaf1_tgt
+            if charge_leaf1_tgt:
+                charge_leaf1 = 5
         else:
             if (bat1 < leaf1max):
                 print("leaf1 < max")
-                charge_leaf1 = charge_leaf1_max
+                if charge_leaf1_max:
+                    charge_leaf1 = 1
             else:
-                print("leaf1 >= max")
+                print("leaf2 >= max")                   
 
     if (bat2 < leaf2min):
         print("leaf2 < min")
-        charge_leaf2 = charge_leaf2_min
+        if charge_leaf2_min:
+            charge_leaf2 = 10
     else:
         if (bat2 < leaf2tgt):
             print("leaf2 < tgt")
-            charge_leaf2 = charge_leaf2_tgt
+            if charge_leaf2_tgt:
+                charge_leaf2 = 5
         else:
             if (bat2 < leaf2max):
                 print("leaf2 < max")
-                charge_leaf2 = charge_leaf2_max
+                if charge_leaf2_max:
+                    charge_leaf2 = 1
             else:
                 print("leaf2 >= max")
 
     if todaypriority == 1:
-        if charge_leaf1:
-            turn_1_on()
-        else:
-            if charge_leaf2:
-                turn_2_on()
-            else:
-                turn_off()
+        if (charge_leaf1 > 0):
+            charge_leaf1 += 1
+
     else:
-        if charge_leaf2:
+        if (charge_leaf2 > 0):
+            charge_leaf2 += 1
+        
+    print("charge points 1",charge_leaf1)
+    print("charge points 2",charge_leaf2)
+    
+    if charge_leaf1 > charge_leaf2:
+        turn_1_on()
+    else:
+        if charge_leaf1 > charge_leaf2:
             turn_2_on()
         else:
-            if charge_leaf1:
-                turn_1_on()
-            else:
-                turn_off()
+            turn_off()        
 
 
     print('Plug 1 Is on:     %s' % plug1.is_on)
     print('Plug 2 Is on:     %s' % plug2.is_on)
-    time.sleep(120)
+    time.sleep(300)
 
 
 import threading

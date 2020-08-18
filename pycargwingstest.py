@@ -53,33 +53,34 @@ def print_info(info):
 def turn_1_on():
     global plug1
     global plug2
+    global plug3    
     global leaf
+    plug3.turn_off()    
     plug2.turn_off()
     time.sleep(5)
     plug1.turn_on()
-    time.sleep(5)
-    #resp=leaf.start_charging()
-    resp="Ok"
-    print("Charging car 1:",resp)
+    print("Charging car 1")
     
 def turn_off():
     global plug1
     global plug2
+    global plug3  
     plug1.turn_off()
-    time.sleep(5)
     plug2.turn_off()
+    time.sleep(5)
+    plug3.turn_on()  
+    print("Charging no car")
     
 def turn_2_on():
     global plug1
     global plug2
+    global plug3  
     global leaf2
+    plug3.turn_off()
     plug1.turn_off()
     time.sleep(5)
     plug2.turn_on()
-    time.sleep(5)
-    #resp=leaf2.start_charging()
-    resp="Ok"
-    print("Charging car 2:",resp)    
+    print("Charging car 2")    
 
 def infoEnchufe(plx,name):
     print(name,":")
@@ -110,6 +111,7 @@ from tplink_smartplug import SmartPlug
 def working_session():
     global plug1
     global plug2
+    global plug3
     global leaf1
     global leaf2    
     #help(SmartPlug)
@@ -128,6 +130,7 @@ def working_session():
     region = parser.get('get-leaf-info', 'region')
     plug1address = parser.get('get-leaf-info', 'plug1address')
     plug2address = parser.get('get-leaf-info', 'plug2address')
+    plug3address = parser.get('get-leaf-info', 'plug3address')
     useweekday = ("True" == parser.get('get-leaf-info', 'cfg_use_weekday'))
     start_minimum_price = int(parser.get('get-leaf-info', 'start_minimum_price'))
     end_minimum_price = int(parser.get('get-leaf-info', 'end_minimum_price'))
@@ -192,6 +195,8 @@ def working_session():
     plug2 = SmartPlug(plug2address)
     infoEnchufe(plug2,"Second car plug")
 
+    plug3 = SmartPlug(plug3address)
+    infoEnchufe(plug3,"Water warmer plug")
 
     if (write_thingsboard):
         print(config_tb.telemetry_address)
@@ -223,6 +228,19 @@ def working_session():
         print(pload)
         print("========")
         r = requests.post(config_tb.telemetry_address2,json = pload)
+        print(r.status_code)
+
+        category = "plug3"
+        emeterinfo = plug3.command(('emeter', 'get_realtime'))
+        pload = {'ts':unixtime, "values":{         
+            category+'_is_on':plug3.is_on,
+            category+'_rssi':plug3.rssi,
+            category+'_current_ma':emeterinfo['current_ma'],
+            category+'_power_mw':emeterinfo['power_mw'],
+            }}
+        print(pload)
+        print("========")
+        r = requests.post(config_tb.telemetry_address3,json = pload)
         print(r.status_code)
 
 
@@ -280,8 +298,10 @@ def working_session():
         #latest_date = latest_leaf_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
         #print("latest_date=", latest_date)
         print_info(latest_leaf_info)
+        bat1 = latest_leaf_info.battery_percent
     else:
-        print("ERROR: >>>> status could not be retrieved")    
+        print("ERROR: >>>> status could not be retrieved")
+        bat1 = leaf_info.battery_percent   
 
     print("********** Second Car Current Status************")
     if (update_status2 is not None):
@@ -290,12 +310,11 @@ def working_session():
         #latest_date2 = latest_leaf_info2.answer["BatteryStatusRecords"]["OperationDateAndTime"]
         #print("latest_date2=", latest_date2)
         print_info(latest_leaf_info2)
+        bat2 = latest_leaf_info2.battery_percent
     else:
         print("ERROR: >>>> status could not be retrieved")
-
-    bat1 = latest_leaf_info.battery_percent
-    bat2 = latest_leaf_info2.battery_percent
-
+        bat2 = leaf_info2.battery_percent
+    
     
     if (todaypriority == 1):
         charge_leaf1_min = charge_min_prio
@@ -366,7 +385,7 @@ def working_session():
     if charge_leaf1 > charge_leaf2:
         turn_1_on()
     else:
-        if charge_leaf1 > charge_leaf2:
+        if charge_leaf1 < charge_leaf2:
             turn_2_on()
         else:
             turn_off()        
@@ -374,6 +393,8 @@ def working_session():
 
     print('Plug 1 Is on:     %s' % plug1.is_on)
     print('Plug 2 Is on:     %s' % plug2.is_on)
+    print('Plug 3 Is on:     %s' % plug3.is_on)
+    print('Sleeping for 5 minutes')
     time.sleep(300)
 
 

@@ -7,6 +7,7 @@ password2 = xxxxxx
 region = NE
 plug1address = 192.168.1.116
 plug2address = 192.168.1.118
+plug3address = 192.168.1.106
 advancehours = 8
 cfg_use_weekday = True
 start_minimum_price = 1

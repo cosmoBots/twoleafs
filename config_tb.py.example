@@ -1,7 +1,10 @@
 
 access_token = "ACCESSTOKEN1"
 access_token2 = "ACCESSTOKEN2"
+access_token3 = "ACCESSTOKEN3"
 server_address = "http://YOURSERVER:PORT/api/v1/"+access_token
 server_address2 = "http://YOURSERVER:PORT/api/v1/"+access_token2
+server_address3 = "http://YOURSERVER:PORT/api/v1/"+access_token3
 telemetry_address = server_address + "/telemetry"
 telemetry_address2 = server_address2 + "/telemetry"
+telemetry_address3 = server_address3 + "/telemetry"

@@ -321,7 +321,7 @@ def working_session():
     if (bat1 < leaf1min):
         print("leaf1 < min")
         if charge_leaf1_min:
-            charge_leaf = 10
+            charge_leaf1 = 10
     else:
         if (bat1 < leaf1tgt):
             print("leaf1 < tgt")

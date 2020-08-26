@@ -4,11 +4,19 @@
 import datetime
 import calendar
 import json
+import threading
+import config_tb
+import requests
 
 write_thingsboard = True
 
-import config_tb
-import requests
+def get_server_leaf1_info():
+    global leaf1_info, leaf1
+    leaf1_info = leaf1.get_latest_battery_status()
+
+def get_server_leaf2_info():
+    global leaf2_info, leaf2
+    leaf2_info = leaf2.get_latest_battery_status()
 
 def wait_update_battery_status(leaf,key,wait_time=1,retries=3,wait_time_retries=1):
     status = leaf.get_status_from_update(key)
@@ -54,7 +62,6 @@ def turn_1_on():
     global plug1
     global plug2
     global plug3    
-    global leaf
     plug3.turn_off()    
     plug2.turn_off()
     time.sleep(5)
@@ -113,7 +120,7 @@ def working_session():
     global plug2
     global plug3
     global leaf1
-    global leaf2    
+    global leaf2
     #help(SmartPlug)
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
     logging.getLogger("pycarwings2").setLevel(logging.ERROR)
@@ -255,7 +262,7 @@ def working_session():
     print("Prepare Session 1")
     s = pycarwings2.Session(username, password, region)
     print("Login...1")
-    leaf = s.get_leaf()
+    leaf1 = s.get_leaf()
 
     print("Prepare Session 2")
     s2 = pycarwings2.Session(username2, password2, region)
@@ -266,20 +273,32 @@ def working_session():
     time.sleep(1)
 
     print("********** First Car Last Status ************")
-    print("get_latest_battery_status from servers")
-    leaf_info = leaf.get_latest_battery_status()
-    #start_date = leaf_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
-    #print("start_date=", start_date)
-    print_info(leaf_info)
+    print("get_latest_battery_status from servers")  
+    try:
+        leaf1_info = leaf1.get_latest_battery_status()
+        #start_date = leaf1_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+        #print("start_date=", start_date)
+        print_info(leaf1_info)
+        bat1 = leaf1_info.battery_percent
+    except:
+        print("No hubo suerte con el leaf1")
+        bat1 = 0
+
     print("request an update from the car itself")
-    key = leaf.request_update()
+    key = leaf1.request_update()
 
     print("********** Second Car Last Status ************")
     print("get_latest_battery_status from servers")
-    leaf_info2 = leaf2.get_latest_battery_status()
-    #start_date2 = leaf_info2.answer["BatteryStatusRecords"]["OperationDateAndTime"]
-    #print("start_date2=", start_date2)
-    print_info(leaf_info2)
+    try:
+        leaf2_info = leaf2.get_latest_battery_status()
+        #start_date = leaf2_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+        #print("start_date=", start_date)
+        print_info(leaf2_info)
+        bat2 = leaf2_info.battery_percent        
+    except:
+        print("No hubo suerte con el leaf2")
+        bat2 = 0
+        
     print("request an update from the car itself")
     key2 = leaf2.request_update()
 
@@ -287,33 +306,40 @@ def working_session():
     time.sleep(1)
     print("***** Waiting for status update *****")
     print("... First car")
-    update_status = wait_update_battery_status(leaf,key,sleepsecs,5,5)
+    update_status = wait_update_battery_status(leaf1,key,sleepsecs,5,5)
     print("... Second car")
     update_status2 = wait_update_battery_status(leaf2,key2,sleepsecs2,5,5)
 
     print("********** First Car Current Status************")
     if (update_status is not None):
         print("OK: >>>>",update_status.answer['status'])
-        latest_leaf_info = leaf.get_latest_battery_status()
-        #latest_date = latest_leaf_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
-        #print("latest_date=", latest_date)
-        print_info(latest_leaf_info)
-        bat1 = latest_leaf_info.battery_percent
+        try:
+            latest_leaf_info = leaf1.get_latest_battery_status()
+            #latest_date = latest_leaf_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+            #print("latest_date=", latest_date)
+            print_info(latest_leaf_info)
+            bat1 = latest_leaf_info.battery_percent
+        except:
+            print("ERROR: >>>> status could not be retrieved")
+            
     else:
         print("ERROR: >>>> status could not be retrieved")
-        bat1 = leaf_info.battery_percent   
+
 
     print("********** Second Car Current Status************")
     if (update_status2 is not None):
         print("OK: >>>>",update_status2.answer['status'])
-        latest_leaf_info2 = leaf2.get_latest_battery_status()
-        #latest_date2 = latest_leaf_info2.answer["BatteryStatusRecords"]["OperationDateAndTime"]
-        #print("latest_date2=", latest_date2)
-        print_info(latest_leaf_info2)
-        bat2 = latest_leaf_info2.battery_percent
+        try:
+            latest_leaf_info2 = leaf2.get_latest_battery_status()
+            #latest_date2 = latest_leaf_info2.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+            #print("latest_date2=", latest_date2)
+            print_info(latest_leaf_info2)
+            bat2 = latest_leaf_info2.battery_percent
+        except:
+            print("No hay informacion actualizada para leaf2")
+            
     else:
         print("ERROR: >>>> status could not be retrieved")
-        bat2 = leaf_info2.battery_percent
     
     
     if (todaypriority == 1):
@@ -398,7 +424,7 @@ def working_session():
     time.sleep(300)
 
 
-import threading
+
 
 workingSessionThread = threading.Thread(target=working_session, name="leafsSession")
 print("*** Lanzo leafsSession")

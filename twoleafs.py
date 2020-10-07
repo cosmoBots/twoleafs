@@ -9,6 +9,7 @@ import config_tb
 import requests
 
 write_thingsboard = True
+cte_charge_threshold = 300
 
 def get_server_leaf1_info():
     global leaf1_info, leaf1
@@ -50,8 +51,8 @@ def print_info(info):
     #print("  is_charging %s" % info.is_charging)
     #print("  is_quick_charging %s" % info.is_quick_charging)
     print("  plugin_state %s" % info.plugin_state)
-    #print("  is_connected %s" % info.is_connected)
-    #print("  is_connected_to_quick_charger %s" % info.is_connected_to_quick_charger)
+    print("  is_connected %s" % info.is_connected)
+    print("  is_connected_to_quick_charger %s" % info.is_connected_to_quick_charger)
     #print("  time_to_full_trickle %s" % info.time_to_full_trickle)
     print("  time_to_full_l2 %s" % info.time_to_full_l2)
     #print("  time_to_full_l2_6kw %s" % info.time_to_full_l2_6kw)
@@ -87,7 +88,21 @@ def turn_2_on():
     plug1.turn_off()
     time.sleep(5)
     plug2.turn_on()
-    print("Charging car 2")    
+    print("Trying to charge car 2")
+    time.sleep(15)
+    emeterinfo = infoEnchufe(plug2,"Checking Second car plug is charging?")
+    print("emeter current ma",emeterinfo['current_ma'],cte_charge_threshold)
+    if (emeterinfo['current_ma']< cte_charge_threshold):
+        print("--------> Car 2 is not present <------- proceed to next car?")
+        ret = False
+        
+    else:
+        ret = True
+        
+    return ret    
+    
+    
+    
 
 def infoEnchufe(plx,name):
     print(name,":")
@@ -103,6 +118,7 @@ def infoEnchufe(plx,name):
     print(emeterinfo)
     print('emeter ma',emeterinfo['current_ma'])
     print('emeter pw',emeterinfo['power_mw'])
+    return emeterinfo
     
 # In[ ]:
 
@@ -197,13 +213,13 @@ def working_session():
         leaf2max = int(parser.get(weekday, 'leaf2max'))
 
     plug1 = SmartPlug(plug1address)
-    infoEnchufe(plug1,"First car plug")
+    emeterinfo1 = infoEnchufe(plug1,"First car plug")
 
     plug2 = SmartPlug(plug2address)
-    infoEnchufe(plug2,"Second car plug")
+    emeterinfo2 = infoEnchufe(plug2,"Second car plug")
 
     plug3 = SmartPlug(plug3address)
-    infoEnchufe(plug3,"Water warmer plug")
+    emeterinfo3 = infoEnchufe(plug3,"Water warmer plug")
 
     if (write_thingsboard):
         print(config_tb.telemetry_address)
@@ -212,12 +228,12 @@ def working_session():
         unixtime2 = int(time.mktime(plug2.time.timetuple())*1000)   
 
         category = "plug1"
-        emeterinfo = plug1.command(('emeter', 'get_realtime'))
+        
         pload = {'ts':unixtime, "values":{         
             category+'_is_on':plug1.is_on,
             category+'_rssi':plug1.rssi,
-            category+'_current_ma':emeterinfo['current_ma'],
-            category+'_power_mw':emeterinfo['power_mw'],
+            category+'_current_ma':emeterinfo1['current_ma'],
+            category+'_power_mw':emeterinfo1['power_mw'],
             }}
         print(pload)
         print("========")
@@ -225,12 +241,11 @@ def working_session():
         print(r.status_code)
 
         category = "plug2"
-        emeterinfo = plug2.command(('emeter', 'get_realtime'))
         pload = {'ts':unixtime, "values":{         
             category+'_is_on':plug2.is_on,
             category+'_rssi':plug2.rssi,
-            category+'_current_ma':emeterinfo['current_ma'],
-            category+'_power_mw':emeterinfo['power_mw'],
+            category+'_current_ma':emeterinfo2['current_ma'],
+            category+'_power_mw':emeterinfo2['power_mw'],
             }}
         print(pload)
         print("========")
@@ -238,12 +253,11 @@ def working_session():
         print(r.status_code)
 
         category = "plug3"
-        emeterinfo = plug3.command(('emeter', 'get_realtime'))
         pload = {'ts':unixtime, "values":{         
             category+'_is_on':plug3.is_on,
             category+'_rssi':plug3.rssi,
-            category+'_current_ma':emeterinfo['current_ma'],
-            category+'_power_mw':emeterinfo['power_mw'],
+            category+'_current_ma':emeterinfo3['current_ma'],
+            category+'_power_mw':emeterinfo3['power_mw'],
             }}
         print(pload)
         print("========")
@@ -280,6 +294,7 @@ def working_session():
         #print("start_date=", start_date)
         print_info(leaf1_info)
         bat1 = leaf1_info.battery_percent
+        
     except:
         print("No hubo suerte con el leaf1")
         bat1 = 0
@@ -319,11 +334,15 @@ def working_session():
             #print("latest_date=", latest_date)
             print_info(latest_leaf_info)
             bat1 = latest_leaf_info.battery_percent
+            conn1 = latest_leaf_info.is_connected
+        
         except:
             print("ERROR: >>>> status could not be retrieved")
+            conn1 = True
             
     else:
         print("ERROR: >>>> status could not be retrieved")
+        conn1 = True
 
 
     print("********** Second Car Current Status************")
@@ -335,11 +354,14 @@ def working_session():
             #print("latest_date2=", latest_date2)
             print_info(latest_leaf_info2)
             bat2 = latest_leaf_info2.battery_percent
+            conn2 = latest_leaf_info.is_connected
         except:
             print("No hay informacion actualizada para leaf2")
+            conn2 = True
             
     else:
         print("ERROR: >>>> status could not be retrieved")
+        conn2 = True
     
     
     if (todaypriority == 1):
@@ -408,11 +430,24 @@ def working_session():
     print("charge points 1",charge_leaf1)
     print("charge points 2",charge_leaf2)
     
+    if not(conn1):
+        charge_leaf1 = 0
+    
+    print("charge points 1",charge_leaf1)
+    print("charge points 2",charge_leaf2)
+    
     if charge_leaf1 > charge_leaf2:
         turn_1_on()
     else:
         if charge_leaf1 < charge_leaf2:
-            turn_2_on()
+            car2present = turn_2_on()
+            if not car2present:
+                print ("Let's proceed to the next in the queue")
+                if (charge_leaf1 > 0):
+                    turn_1_on()
+                    
+                else:
+                    turn_off()
         else:
             turn_off()        
 

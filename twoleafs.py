@@ -400,7 +400,7 @@ def working_session():
                 if charge_leaf1_max:
                     charge_leaf1 = 1
             else:
-                print("leaf2 >= max")                   
+                print("leaf1 >= max")                   
 
     if (bat2 < leaf2min):
         print("leaf2 < min")

@@ -334,10 +334,26 @@ def working_session():
             #print("latest_date=", latest_date)
             print_info(latest_leaf_info)
             bat1 = latest_leaf_info.battery_percent
-            conn1 = latest_leaf_info.is_connected
-        
+            conn1 = latest_leaf_info.is_connected    
+            date_time_obj = datetime.datetime.strptime(latest_leaf_info.answer["BatteryStatusRecords"]["OperationDateAndTime"], '%d-%b-%Y %H:%M')
+            unixtime = int((time.mktime(date_time_obj.timetuple())-3600)*1000)
+            remainingtime = latest_leaf_info.time_to_full_l2.total_seconds()
+
+            category = "car1"
+            pload = {'ts':unixtime, "values":{         
+                category+'_bat':bat1,
+                category+'_conn':conn1,
+                category+'_time2full':remainingtime
+                }}
+            print(pload)
+            print("========")
+            r = requests.post(config_tb.telemetry_address,json = pload)
+            print(r.status_code)        
+
+
+
         except:
-            print("ERROR: >>>> status could not be retrieved")
+            print("No hay informacion actualizada para leaf1")
             conn1 = True
             
     else:
@@ -354,7 +370,22 @@ def working_session():
             #print("latest_date2=", latest_date2)
             print_info(latest_leaf_info2)
             bat2 = latest_leaf_info2.battery_percent
-            conn2 = latest_leaf_info.is_connected
+            conn2 = latest_leaf_info2.is_connected
+            date_time_obj = datetime.datetime.strptime(latest_leaf_info2.answer["BatteryStatusRecords"]["OperationDateAndTime"], '%d-%b-%Y %H:%M')
+            unixtime = int((time.mktime(date_time_obj.timetuple())-3600)*1000)
+            remainingtime = latest_leaf_info2.time_to_full_l2.total_seconds()
+            category = "car2"
+            pload = {'ts':unixtime, "values":{         
+                category+'_bat':bat2,
+                category+'_conn':conn2,
+                category+'_time2full':remainingtime
+                }}
+            print(pload)
+            print("========")
+            r = requests.post(config_tb.telemetry_address2,json = pload)
+            print(r.status_code)        
+
+            
         except:
             print("No hay informacion actualizada para leaf2")
             conn2 = True
